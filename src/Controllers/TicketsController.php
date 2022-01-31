@@ -292,11 +292,11 @@ class TicketsController extends Controller
             'panichd_tickets.completed_at AS completed_at',
             'panichd_tickets.agent_id',
             'panichd_tickets.read_by_agent',
-            'agent.name as agent_name',
+            'agent.username as agent_name',
             'panichd_priorities.name AS priority',
             'panichd_priorities.magnitude AS priority_magnitude',
-            'members.name AS owner_name',
-            'creator.name as creator_name',
+            'members.username AS owner_name',
+            'creator.username as creator_name',
             'panichd_tickets.user_id',
             'panichd_tickets.creator_id',
             'panichd_categories.id as category_id',
@@ -490,7 +490,7 @@ class TicketsController extends Controller
             ->withCount('agents')
             ->with([
                 'agents' => function ($q1) {
-                    $q1->select('id', 'name');
+                    $q1->select('id', 'username');
                 },
 
             ])
@@ -503,7 +503,7 @@ class TicketsController extends Controller
             $a_cat[$cat['id']] = $cat;
             $html = '<div>';
             foreach ($cat['agents'] as $agent) {
-                $html .= '<label><input type="radio" name="%1$s_agent" value="'.$agent['id'].'"> '.$agent['name'].'</label><br />';
+                $html .= '<label><input type="radio" name="%1$s_agent" value="'.$agent['id'].'"> '.$agent['username'].'</label><br />';
             }
             if ($ticketList == 'newest' and Setting::grab('use_default_status_id')) {
                 $html .= '<br /><label><input type="checkbox" name="%1$s_status_checkbox"> '.trans('panichd::lang.table-agent-status-check', ['status' => $active_status_name]).'</label>';
@@ -616,7 +616,7 @@ class TicketsController extends Controller
                 $a_bg_color = array_combine($a_ids, explode(',', $ticket->tags_bg_color));
                 $a_text_color = array_combine($a_ids, explode(',', $ticket->tags_text_color));
                 foreach ($a_tags as $id=> $tag) {
-                    $text .= '<button class="btn btn-default btn-tag btn-xs" style="pointer-events: none; background-color: '.$a_bg_color[$id].'; color: '.$a_text_color[$id].'">'.$tag.'</button> ';
+                    $text .= '<a href="' . route(Setting::grab('main_route') . '.search') . '/category_id/' . $ticket->category_id . '/tags_type/all/tags/' . $id . '" class="btn btn-default btn-tag btn-xs mb-1 mr-1" style="background-color: '.$a_bg_color[$id].'; color: '.$a_text_color[$id].'">'.$tag.'</a> ';
                 }
             }
 
@@ -624,6 +624,16 @@ class TicketsController extends Controller
         });
 
         return $collection;
+    }
+
+    /**
+     * Notices list
+     *
+     * @return Response
+     */
+    public function noticesIndex(Request $request)
+    {
+        return view('panichd::notices.index');
     }
 
     /**
@@ -662,7 +672,7 @@ class TicketsController extends Controller
     public function indexProcess($request, $ticketList)
     {
         $a_cat_agents = Category::with(['agents'=> function ($q) {
-            $q->select('id', 'name');
+            $q->select('id', 'username');
         }])->select('id', 'name')->get();
 
         $data = [
@@ -992,7 +1002,6 @@ class TicketsController extends Controller
         }
 
         $a_categories = $this->member->getEditTicketCategories();
-
         $c_visible_agents = \PanicHDMember::visible()->get();
 
         // Tag lists
@@ -1014,7 +1023,7 @@ class TicketsController extends Controller
         }
 
         $data['a_cat_agents'] = Category::with(['agents'=> function ($q) {
-            $q->select('id', 'name');
+            $q->select('id', 'username');
         }])->select('id', 'name')->get();
 
         return $data;
@@ -1037,7 +1046,7 @@ class TicketsController extends Controller
         $search_URL = route(Setting::grab('main_route').'.search');
 
         // Check all fields
-        $a_fields = array_merge($this->a_search_fields_numeric, ['tags_type'], $this->a_search_fields_text, $this->a_search_fields_date, $this->a_search_fields_text_special, ['department_id', 'list']);
+        $a_fields = array_merge($this->a_search_fields_numeric, $this->a_search_fields_text, $this->a_search_fields_date, $this->a_search_fields_text_special, ['department_id', 'list']);
         foreach ($a_fields as $field) {
             if ($request->filled($field)) {
                 // Add field to search
@@ -1629,15 +1638,11 @@ class TicketsController extends Controller
 
         $this->sync_ticket_tags($request, $ticket);
 
-        session()->flash('status', trans('panichd::lang.the-ticket-has-been-created', [
-            'name'  => '#'.$ticket->id.' '.$ticket->subject,
-            'link'  => route(Setting::grab('main_route').'.show', $ticket->id),
-            'title' => trans('panichd::lang.ticket-status-link-title'),
-        ]));
+        session()->flash('status', trans('panichd::lang.the-ticket-has-been-created', ['name' => '']));
 
         return response()->json([
             'result' => 'ok',
-            'url'    => action('\PanicHD\PanicHD\Controllers\TicketsController@index'),
+            'url'    => route(Setting::grab('main_route').'.show', $ticket->id),
         ]);
     }
 
@@ -1764,7 +1769,9 @@ class TicketsController extends Controller
             ->with('creator')
             ->with('agent')
             ->with('category.closingReasons')
-            ->with('tags')
+            ->with(['tags' => function($q){
+                $q->withCount('tickets');
+            }])
             ->leftJoin($members_table, function ($join1) use ($members_table) {
                 $join1->on($members_table.'.id', '=', 'panichd_tickets.user_id');
             })
@@ -1781,9 +1788,9 @@ class TicketsController extends Controller
 
         $a_select = [
             'panichd_tickets.*',
-            $members_table.'.name as owner_name',
-            'creator.name as creator_name',
-            'agent.name as agent_name',
+            $members_table.'.username as owner_name',
+            'creator.username as creator_name',
+            'agent.username as agent_name',
             $members_table.'.email as owner_email',
         ];
 
@@ -1949,9 +1956,9 @@ class TicketsController extends Controller
             $c_members = $c_members->where('email', '!=', auth()->user()->email);
         }
         if ($this->member->currentLevel() > 1) {
-            return $c_members->orderBy('name')->get();
+            return $c_members->orderBy('username')->get();
         } else {
-            return $c_members->whereNull('ticketit_department')->orWhere('id', '=', $this->member->id)->orderBy('name')->get();
+            return $c_members->whereNull('panichd_department')->orWhere('id', '=', $this->member->id)->orderBy('username')->get();
         }
     }
 
@@ -2075,7 +2082,7 @@ class TicketsController extends Controller
 
         $this->sync_ticket_tags($request, $ticket);
 
-        session()->flash('status', trans('panichd::lang.the-ticket-has-been-modified', ['name' => '#'.$ticket->id.' "'.$ticket->subject.'"']));
+        session()->flash('status', trans('panichd::lang.the-ticket-has-been-modified', ['name' => '']));
 
         return response()->json([
             'result' => 'ok',
@@ -2258,13 +2265,10 @@ class TicketsController extends Controller
             // Add complete comment
             $this->complete_change_actions($ticket, $this->member, $member_reason, $a_clarification);
 
-            session()->flash('status', trans('panichd::lang.the-ticket-has-been-completed', [
-                'name'  => '#'.$id.' '.$ticket->subject,
-                'link'  => route(Setting::grab('main_route').'.show', $id),
-                'title' => trans('panichd::lang.ticket-status-link-title'),
-            ]));
+            session()->flash('status', trans('panichd::lang.the-ticket-has-been-completed', ['name' => '']));
 
-            return redirect()->route(Setting::grab('main_route').'.index');
+
+            return redirect()->route(Setting::grab('main_route').'.show', ['ticket' => $ticket->id]);
         }
 
         return redirect()->route(Setting::grab('main_route').'.index')
@@ -2350,13 +2354,9 @@ class TicketsController extends Controller
             // Add reopen comment
             $this->complete_change_actions($ticket, $this->member);
 
-            session()->flash('status', trans('panichd::lang.the-ticket-has-been-reopened', [
-                'name'  => '#'.$id.' '.$ticket->subject,
-                'link'  => route(Setting::grab('main_route').'.show', $id),
-                'title' => trans('panichd::lang.ticket-status-link-title'),
-            ]));
+            session()->flash('status', trans('panichd::lang.the-ticket-has-been-reopened', ['name' => '']));
 
-            return redirect()->route(Setting::grab('main_route').'.index');
+            return redirect()->route(Setting::grab('main_route').'.show', ['ticket' => $ticket->id]);
         }
 
         return redirect()->route(Setting::grab('main_route').'.index')

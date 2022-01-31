@@ -22,9 +22,9 @@
                 @foreach ($c_members as $member)
                     <option value="{{ $member->id }}" @if(isset($search_fields['creator_id']) && $search_fields['creator_id'] == $member->id) selected="selected" @endif>{{ $member->name . ($member->email == "" ? ' ' . trans('panichd::lang.ticket-owner-no-email') : ' - ' . $member->email) }}
                     @if ($setting->grab('departments_notices_feature'))
-                        @if ($member->ticketit_department == '0')
+                        @if ($member->panichd_department == '0')
                             {{ ' - ' . trans('panichd::lang.create-ticket-notices') . ' ' . trans('panichd::lang.all-depts')}}
-                        @elseif ($member->ticketit_department != "")
+                        @elseif ($member->panichd_department != "")
                             {{ ' - ' . trans('panichd::lang.create-ticket-notices') . ' ' . $member->userDepartment->getFullName() }}
                         @endif
                     @endif
@@ -33,7 +33,7 @@
             </select>
         </div>
     </div>
-    
+
     <div style="margin-bottom: 1.5em">
         <div class="form-group row @if(isset($search_fields['user_id'])) bg-info @endif"><!-- OWNER -->
             <label for="user_id" class="col-lg-3 col-form-label tooltip-info" title="{{ trans('panichd::lang.searchform-help-owner') }}">{{trans('panichd::lang.owner') . trans('panichd::lang.colon')}} <span class="fa fa-question-circle" style="color: #bbb"></span></label>
@@ -43,9 +43,9 @@
                     @foreach ($c_members as $owner)
                         <option value="{{ $owner->id }}" @if(isset($search_fields['user_id']) && $search_fields['user_id'] == $owner->id) selected="selected" @endif>{{ $owner->name . ($owner->email == "" ? ' ' . trans('panichd::lang.ticket-owner-no-email') : ' - ' . $owner->email) }}
                         @if ($setting->grab('departments_notices_feature'))
-                            @if ($owner->ticketit_department == '0')
+                            @if ($owner->panichd_department == '0')
                                 {{ ' - ' . trans('panichd::lang.create-ticket-notices') . ' ' . trans('panichd::lang.all-depts')}}
-                            @elseif ($owner->ticketit_department != "")
+                            @elseif ($owner->panichd_department != "")
                                 {{ ' - ' . trans('panichd::lang.create-ticket-notices') . ' ' . $owner->userDepartment->getFullName() }}
                             @endif
                         @endif
@@ -146,7 +146,7 @@
             </div>
         </div>
     </div>
-    
+
     <div class="form-group row @if(isset($search_fields['limit_date'])) bg-info @endif" style="margin-bottom: 1.5em"><!-- LIMIT DATE -->
         {!! CollectiveForm::label('limit_date', trans('panichd::lang.limit-date') . trans('panichd::lang.colon'), ['class' => 'col-lg-3 col-form-label']) !!}
         <div class="col-lg-9">
@@ -176,7 +176,7 @@
                 @foreach($a_categories as $id => $cat)
                     <option value="{{ $id }}" @if(isset($search_fields['category_id']) && $search_fields['category_id'] == $id) selected="selected" @endif>{{ $cat }}</option>
                 @endforeach
-            </select>    
+            </select>
        </div>
     </div>
 
@@ -206,7 +206,7 @@
                 <label class="ml-2"><input type="radio" name="tags_type" value="has_not_tags" @if(isset($search_fields['tags_type']) && $search_fields['tags_type'] == 'has_not_tags') checked="checked" @endif> {{ trans('panichd::lang.searchform-tags-rule-has_not_tags') }}</label>
                 <label class="ml-2"><input type="radio" name="tags_type" value="has_any_tag" @if(isset($search_fields['tags_type']) && $search_fields['tags_type'] == 'has_any_tag') checked="checked" @endif> {{ trans('panichd::lang.searchform-tags-rule-has_any_tag') }}</label>
                 <span id="category_tags_rules" class="ml-2" @if(!isset($search_fields['category_id'])) style="display: none" @endif>
-                    <label><input type="radio" name="tags_type" value="any" @if(isset($search_fields['tags_type']) && $search_fields['tags_type'] == 'all') checked="checked" @endif> {{ trans('panichd::lang.searchform-tags-rule-any') }}</label>
+                    <label><input type="radio" name="tags_type" value="any" @if(isset($search_fields['tags_type']) && $search_fields['tags_type'] == 'any') checked="checked" @endif> {{ trans('panichd::lang.searchform-tags-rule-any') }}</label>
                     <label class="ml-2"><input type="radio" name="tags_type" value="all" @if(isset($search_fields['tags_type']) && $search_fields['tags_type'] == 'all') checked="checked" @endif> {{ trans('panichd::lang.searchform-tags-rule-all') }}</label>
                     <label class="ml-2"><input type="radio" name="tags_type" value="none" @if(isset($search_fields['tags_type']) && $search_fields['tags_type'] == 'none') checked="checked" @endif> {{ trans('panichd::lang.searchform-tags-rule-none') }}</label>
                 </span>

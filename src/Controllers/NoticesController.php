@@ -21,12 +21,12 @@ class NoticesController extends Controller
     public function index()
     {
         // All users
-        $a_users = \PanicHDMember::whereNotNull('ticketit_department')->orderBy('name')->get();
+        $a_users = \PanicHDMember::whereNotNull('panichd_department')->orderBy('username')->get();
 
         // All departments
         $departments = Models\Department::doesntHave('ancestor')->with(['descendants' => function ($query) {
-            $query->orderBy('name');
-        }])->orderBy('name')->get();
+            $query->orderBy('username');
+        }])->orderBy('username')->get();
 
         return view('panichd::admin.notice.index', compact('a_users', 'departments'));
     }
@@ -50,7 +50,7 @@ class NoticesController extends Controller
 
         $user = \PanicHDMember::findOrFail($request->input('user_id'));
 
-        $user->ticketit_department = $request->input('department_id');
+        $user->panichd_department = $request->input('department_id');
         $user->save();
 
         \Session::flash('status', trans('panichd::admin.notice-saved-ok'));
@@ -66,7 +66,7 @@ class NoticesController extends Controller
     public function destroy($id)
     {
         $user = \PanicHDMember::findOrFail($id);
-        $user->ticketit_department = null;
+        $user->panichd_department = null;
         $user->save();
 
         \Session::flash('status', trans('panichd::admin.notice-deleted-ok'));

@@ -49,7 +49,9 @@ class DemoDataSeeder extends Seeder
             $email = 'agent'.$a.$this->email_domain;
 
             $agent_info = \PanicHDMember::firstOrNew(['email' => $email]);
-            $agent_info->name = $faker->name;
+            $agent_info->first_name = $faker->name;
+            $agent_info->last_name = $faker->name;
+            $agent_info->username = $faker->name;
             $agent_info->panichd_agent = 1;
             $agent_info->password = Hash::make($this->default_agent_password);
             $agent_info->save();
@@ -109,7 +111,9 @@ class DemoDataSeeder extends Seeder
             $email = 'user'.$u.$this->email_domain;
 
             $user_info = \PanicHDMember::firstOrNew(['email' => $email]);
-            $user_info->name = $faker->name;
+            $user_info->first_name = $faker->name;
+            $user_info->last_name = $faker->name;
+            $user_info->username = $faker->name;
             $user_info->panichd_agent = 0;
             $user_info->password = Hash::make($this->default_user_password);
             $user_info->save();

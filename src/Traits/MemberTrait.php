@@ -75,9 +75,9 @@ trait MemberTrait
     public function scopeAgentsLists($query)
     {
         if (version_compare(app()->version(), '5.2.0', '>=')) {
-            return $query->where('panichd_agent', '1')->pluck('name', 'id')->toArray();
+            return $query->where('panichd_agent', '1')->pluck('username', 'id')->toArray();
         } else { // if Laravel 5.1
-            return $query->where('panichd_agent', '1')->lists('name', 'id')->toArray();
+            return $query->where('panichd_agent', '1')->lists('username', 'id')->toArray();
         }
     }
 
@@ -289,13 +289,13 @@ trait MemberTrait
     }
 
     /**
-     * Get directly associated department (ticketit_department).
+     * Get directly associated department (panichd_department).
      *
      * @return \Illuminate\Database\Eloquent\Relations\BelongsTo
      */
     public function userDepartment()
     {
-        return $this->belongsTo('PanicHD\PanicHD\Models\Department', 'ticketit_department', 'id');
+        return $this->belongsTo('PanicHD\PanicHD\Models\Department', 'panichd_department', 'id');
     }
 
     /**
@@ -397,7 +397,7 @@ trait MemberTrait
         $member = \PanicHDMember::findOrFail(auth()->user()->id);
 
         if ($member->panichd_admin) {
-            return $query->orderBy('name', 'ASC');
+            return $query->orderBy('username', 'ASC');
         } elseif ($member->panichd_agent) {
             return $query->VisibleForAgent($member->id);
         } else {
@@ -424,17 +424,17 @@ trait MemberTrait
                     $q1->whereHas('agents', function ($q2) use ($id) {
                         $q2->where('id', $id);
                     });
-                })->orderBy('name', 'ASC');
+                })->orderBy('username', 'ASC');
             } else {
                 return $query->where('id', $id);
             }
         } else {
-            return false;
+            return $query->where('id', '0');
         }
     }
 
     /**
-     * Get array with all user id's from the departments where current user belongs and users that have ticketit_department = 0.
+     * Get array with all user id's from the departments where current user belongs and users that have panichd_department = 0.
      *
      * @return array
      */
@@ -457,14 +457,14 @@ trait MemberTrait
          *	Get related Departamental users from my related departments
          *
          * Conditions:
-         *    - agent ticketit_department in related_departments
+         *    - agent panichd_department in related_departments
          *    - agent person in related_departments
         */
         $related_users = \PanicHDMember::where('id', '!=', $this->id)
-            ->whereIn('ticketit_department', $related_departments);
+            ->whereIn('panichd_department', $related_departments);
 
         // Get users that are visible by all departments
-        $all_dept_users = \PanicHDMember::where('ticketit_department', '0');
+        $all_dept_users = \PanicHDMember::where('panichd_department', '0');
 
         if (version_compare(app()->version(), '5.3.0', '>=')) {
             $related_users = $related_users->pluck('id')->toArray();

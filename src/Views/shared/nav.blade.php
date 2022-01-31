@@ -51,6 +51,7 @@
 	</li>
 @endsection
 
+@if($u->isAdmin() || ($u->isAgent() && $u->currentLevel() > 1))
 @section('panichd_nav_search')
 	<li id="nav_search_li" class="nav-item {!! request()->route()->getName() == $setting->grab('main_route').'.search' ? "active" : "" !!}">
 		<a class="nav-link" href="{{ action('\PanicHD\PanicHD\Controllers\TicketsController@search_form') }}">
@@ -58,6 +59,7 @@
 		</a>
 	</li>
 @endsection
+@endif
 
 @section('panichd_nav_admin')
 	@if($u->isAdmin())
