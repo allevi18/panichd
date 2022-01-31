@@ -1,6 +1,6 @@
 <?php
 
-Route::group(['middleware' => \PanicHD\PanicHD\Helpers\LaravelVersion::authMiddleware()], function () use ($main_route, $main_route_path, $admin_route, $admin_route_path) {
+Route::group(['prefix' => LaravelLocalization::setLocale(),'middleware' => \PanicHD\PanicHD\Helpers\LaravelVersion::authMiddleware()], function () use ($main_route, $main_route_path, $admin_route, $admin_route_path) {
 
     // Notice list
     Route::get("$main_route_path/notices", 'PanicHD\PanicHD\Controllers\TicketsController@noticesIndex')

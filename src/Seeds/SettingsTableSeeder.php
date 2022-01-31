@@ -89,8 +89,8 @@ class SettingsTableSeeder extends Seeder
              * Panic Help Desk admin route: Where to load all the administration menusd (ex. http://url/panichd/category)
              * Default: /panichd
              */
-            'admin_route'      => 'panichd',
-            'admin_route_path' => 'panichd',
+            'admin_route'      => 'panel/panichd',
+            'admin_route_path' => 'panel/panichd',
             /*
              * Template adherence: The master blade template to be extended
              * Default: panichd::master
